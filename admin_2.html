@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>보고서 등록 — 그룹온라인 IT</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --void:#0E1116; --shelf:#161B23; --shelf-2:#1D2430;
+    --edge:#2A3341; --edge-hi:#3C4757;
+    --ink:#E9EDF4; --ink-2:#9AA6B8; --dim:#6B7789;
+    --beam:#6EA8FE; --beam-soft:#6EA8FE1A;
+    --ok:#4ADE80; --wait:#FBBF24; --bad:#F87171;
+    --mono:"SF Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--void);color:var(--ink);
+    font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo",sans-serif;
+    line-height:1.6;font-size:15px;-webkit-font-smoothing:antialiased;min-height:100vh;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  a{color:var(--beam)}
+
+  /* ── 로그인 ── */
+  #gate{display:grid;place-items:center;min-height:100vh;padding:24px}
+  .gate-box{width:100%;max-width:360px}
+  .gate-box .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
+  .gate-box h1{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:12px 0 6px}
+  .gate-box p{color:var(--ink-2);font-size:13.5px;margin-bottom:26px}
+
+  /* ── 상단 ── */
+  header{border-bottom:1px solid var(--edge);padding:20px 0;margin-bottom:34px}
+  .head-row{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  .brandmark{font-size:17px;font-weight:800;letter-spacing:-.01em}
+  .brandmark span{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;color:var(--dim);
+    text-transform:uppercase;display:block;font-weight:400;margin-bottom:3px}
+  .who{font-family:var(--mono);font-size:11.5px;color:var(--dim);display:flex;align-items:center;gap:14px}
+
+  /* ── 레이아웃 ── */
+  .cols{display:grid;grid-template-columns:1fr 380px;gap:34px;padding-bottom:90px;align-items:start}
+  @media (max-width:940px){.cols{grid-template-columns:1fr}}
+
+  .panel{background:var(--shelf);border:1px solid var(--edge);border-radius:12px;padding:22px}
+  .panel h2{font-size:14px;font-weight:700;margin-bottom:4px}
+  .panel .hint{font-size:12.5px;color:var(--dim);margin-bottom:20px}
+
+  /* ── 폼 ── */
+  .field{margin-bottom:16px}
+  label{display:block;font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:6px}
+  label .opt{color:var(--dim);font-weight:400}
+  input[type=text],input[type=date],input[type=email],input[type=password],textarea,select{
+    width:100%;background:var(--void);border:1px solid var(--edge);border-radius:8px;
+    padding:9px 12px;color:var(--ink);font-family:inherit;font-size:14px;transition:border-color .15s;
+  }
+  input::placeholder,textarea::placeholder{color:var(--dim)}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--beam);box-shadow:0 0 0 3px var(--beam-soft)}
+  textarea{resize:vertical;min-height:82px;line-height:1.6}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .mono{font-family:var(--mono)}
+
+  .picks{display:flex;gap:6px;flex-wrap:wrap}
+  .pick{
+    background:transparent;border:1px solid var(--edge);color:var(--ink-2);border-radius:99px;
+    padding:6px 13px;font-size:12.5px;font-family:inherit;cursor:pointer;transition:all .15s;
+  }
+  .pick:hover{border-color:var(--edge-hi);color:var(--ink)}
+  .pick[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--void);font-weight:600}
+  .pick:focus-visible{outline:2px solid var(--beam);outline-offset:2px}
+
+  .share{display:flex;flex-direction:column;gap:8px}
+  .share input{font-size:11.5px;color:var(--ink-2)}
+
+  /* ── 드롭존 ── */
+  .drop{
+    border:1.5px dashed var(--edge-hi);border-radius:10px;padding:28px 16px;text-align:center;
+    color:var(--dim);font-size:13px;cursor:pointer;transition:all .18s;background:var(--void);
+  }
+  .drop:hover,.drop.over{border-color:var(--beam);background:var(--beam-soft);color:var(--ink-2)}
+  .drop.has{border-style:solid;border-color:var(--ok);color:var(--ok);font-family:var(--mono);font-size:12px}
+  .drop strong{display:block;color:var(--ink);font-weight:600;margin-bottom:4px;font-size:13.5px}
+
+  /* ── 버튼 ── */
+  .btn{
+    background:var(--beam);color:#08111F;border:none;border-radius:8px;padding:11px 18px;
+    font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:filter .15s;
+  }
+  .btn:hover{filter:brightness(1.1)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.ghost{background:transparent;border:1px solid var(--edge);color:var(--ink-2);font-weight:500}
+  .btn.ghost:hover{border-color:var(--edge-hi);color:var(--ink)}
+  .btn.wide{width:100%}
+  .btn:focus-visible{outline:2px solid var(--beam);outline-offset:2px}
+  .actions{display:flex;gap:9px;margin-top:22px;padding-top:18px;border-top:1px solid var(--edge)}
+
+  /* ── 목록 ── */
+  .list{display:flex;flex-direction:column;gap:2px}
+  .item{
+    display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
+    padding:11px 12px;border-radius:8px;cursor:pointer;transition:background .14s;
+    border:1px solid transparent;text-align:left;background:none;font-family:inherit;color:inherit;width:100%;
+  }
+  .item:hover{background:var(--shelf-2)}
+  .item[aria-current="true"]{background:var(--shelf-2);border-color:var(--beam)}
+  .item .dk{font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+  .item .tt{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .item .st{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:4px;border:1px solid;white-space:nowrap}
+  .s-확정,.s-종결{color:var(--ok);border-color:#4ADE8055}
+  .s-진행중{color:var(--beam);border-color:#6EA8FE55}
+  .s-검토중,.s-작성중,.s-보류{color:var(--wait);border-color:#FBBF2455}
+
+  /* ── 알림 ── */
+  #toast{
+    position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(120%);
+    background:var(--shelf-2);border:1px solid var(--edge-hi);border-radius:9px;
+    padding:12px 20px;font-size:13.5px;z-index:99;transition:transform .28s cubic-bezier(.2,.7,.3,1);
+    box-shadow:0 14px 40px rgba(0,0,0,.55);max-width:min(520px,90vw);
+  }
+  #toast.up{transform:translateX(-50%) translateY(0)}
+  #toast.ok{border-color:#4ADE8066}
+  #toast.bad{border-color:#F8717166}
+  .hidden{display:none!important}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ── 로그인 ── -->
+<div id="gate">
+  <div class="gate-box">
+    <div class="kicker">Group Online IT</div>
+    <h1>보고서 등록</h1>
+    <p>등록·수정은 팀 계정으로 로그인해야 합니다.</p>
+    <div class="field">
+      <label for="em">이메일</label>
+      <input id="em" type="email" autocomplete="username" placeholder="name@eland.co.kr">
+    </div>
+    <div class="field">
+      <label for="pw">비밀번호</label>
+      <input id="pw" type="password" autocomplete="current-password">
+    </div>
+    <button class="btn wide" id="loginBtn">로그인</button>
+    <p style="margin-top:16px;font-size:12.5px"><a href="/functions/v1/hub">대장 보러 가기 →</a></p>
+  </div>
+</div>
+
+<!-- ── 콘솔 ── -->
+<div id="app" class="hidden">
+  <header>
+    <div class="wrap head-row">
+      <div class="brandmark"><span>Report Registry</span>보고서 등록</div>
+      <div class="who">
+        <a href="/functions/v1/hub">대장 보기</a>
+        <span id="me"></span>
+        <button class="btn ghost" id="outBtn" style="padding:6px 12px;font-size:12.5px">로그아웃</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap cols">
+
+    <!-- 폼 -->
+    <div class="panel">
+      <h2 id="formTitle">새 보고서 등록</h2>
+      <p class="hint" id="formHint">HTML 파일을 올리면 제목을 자동으로 읽어옵니다.</p>
+
+      <div class="field">
+        <label for="file">원본 HTML</label>
+        <div class="drop" id="drop" role="button" tabindex="0">
+          <strong>파일을 끌어다 놓으세요</strong>
+          클릭해서 선택할 수도 있습니다 · .html
+        </div>
+        <input id="file" type="file" accept=".html,text/html" class="hidden">
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label for="docket">문서번호</label>
+          <input id="docket" type="text" class="mono" placeholder="자동 부여">
+        </div>
+        <div class="field">
+          <label for="reported_on">보고일</label>
+          <input id="reported_on" type="date">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="title">제목</label>
+        <input id="title" type="text" placeholder="키디키디 EnC 연동 방식 확정 보고">
+      </div>
+
+      <div class="field">
+        <label for="subtitle">부제 <span class="opt">· 선택</span></label>
+        <input id="subtitle" type="text" placeholder="링크 이동 + 양방향 암호화 인증">
+      </div>
+
+      <div class="field">
+        <label for="summary">요약 <span class="opt">· 대장 카드에 3줄까지 노출</span></label>
+        <textarea id="summary" placeholder="보고서의 결론을 1~2문장으로. 나중에 목록에서 이 글만 보고 찾게 됩니다."></textarea>
+      </div>
+
+      <div class="field">
+        <label>보고 유형</label>
+        <div class="picks" id="typePicks"></div>
+      </div>
+
+      <div class="field">
+        <label>상태</label>
+        <div class="picks" id="statusPicks"></div>
+      </div>
+
+      <div class="field">
+        <label>관련 브랜드 <span class="opt">· 복수 선택</span></label>
+        <div class="picks" id="brandPicks"></div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label for="audience">보고 대상 <span class="opt">· 선택</span></label>
+          <input id="audience" type="text" placeholder="브랜드장 / 영업 리더">
+        </div>
+        <div class="field">
+          <label for="tags">태그 <span class="opt">· 쉼표로 구분</span></label>
+          <input id="tags" type="text" placeholder="보안, 인프라, ISMS">
+        </div>
+      </div>
+
+      <div class="field hidden" id="shareField">
+        <label>공유 링크 <span class="opt">· 계정 없는 분께 전달</span></label>
+        <div class="share">
+          <button class="btn ghost" id="shareBtn" type="button">90일짜리 링크 만들기</button>
+          <input id="shareUrl" type="text" class="mono hidden" readonly>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="saveBtn">등록</button>
+        <button class="btn ghost hidden" id="newBtn">새로 작성</button>
+        <button class="btn ghost hidden" id="delBtn" style="margin-left:auto;color:var(--bad)">삭제</button>
+      </div>
+    </div>
+
+    <!-- 목록 -->
+    <div class="panel">
+      <h2>등록된 보고서</h2>
+      <p class="hint"><span id="cnt">0</span>건 · 누르면 수정합니다</p>
+      <div class="list" id="list"></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ─────────────────────────────────────────────
+   설정
+   ───────────────────────────────────────────── */
+const SUPABASE_URL = "https://urlspnmnjzvqzjfdicbm.supabase.co";
+const SUPABASE_KEY = "sb_publishable_EqiGjr0TQzGWAmU46Q8OVQ_Q-AvYTI9";
+
+const TYPES    = ["공수검토","진행보고","의사결정","계획","분석","회의결과"];
+const STATUSES = ["작성중","검토중","확정","진행중","종결","보류"];
+const BRANDS   = ["이랜드몰","키디키디","스파오","미쏘","공통"];
+
+/* ───────────────────────────────────────────── */
+let sb = null, editing = null, pending = null;
+const state = { type:"진행보고", status:"검토중", brands:[] };
+const $ = id => document.getElementById(id);
+
+function toast(msg, kind="ok"){
+  const t = $("toast");
+  t.textContent = msg;
+  t.className = "up " + kind;
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className = kind, 3400);
+}
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  document.body.innerHTML =
+    `<div style="max-width:520px;margin:22vh auto;padding:0 24px;font-family:system-ui">
+       <h1 style="font-size:20px;margin-bottom:10px">설정이 필요합니다</h1>
+       <p style="color:#9AA6B8;font-size:14px;line-height:1.7">
+         admin.html 상단의 <code style="color:#6EA8FE">SUPABASE_URL</code> 과
+         <code style="color:#6EA8FE">SUPABASE_KEY</code> 를 채우면 로그인 화면이 나타납니다.<br>
+         Supabase Dashboard → Project Settings → API 에서 확인할 수 있습니다.
+       </p>
+     </div>`;
+} else {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  boot();
+}
+
+async function boot(){
+  buildPicks();
+  const { data:{ session } } = await sb.auth.getSession();
+  session ? enter(session) : $("gate").classList.remove("hidden");
+  sb.auth.onAuthStateChange((_e, s) => { if (!s) location.reload(); });
+}
+
+function enter(session){
+  $("gate").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  $("me").textContent = session.user.email;
+  resetForm();
+  loadList();
+}
+
+$("loginBtn").onclick = async () => {
+  const btn = $("loginBtn");
+  btn.disabled = true; btn.textContent = "확인 중…";
+  const { data, error } = await sb.auth.signInWithPassword({
+    email: $("em").value.trim(), password: $("pw").value
+  });
+  btn.disabled = false; btn.textContent = "로그인";
+  if (error) return toast("로그인하지 못했습니다. 이메일과 비밀번호를 확인하세요.", "bad");
+  enter(data.session);
+};
+$("pw").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
+$("outBtn").onclick = () => sb.auth.signOut();
+
+/* ── 칩 ── */
+function buildPicks(){
+  single("typePicks", TYPES, "type");
+  single("statusPicks", STATUSES, "status");
+  multi("brandPicks", BRANDS);
+}
+function single(id, items, key){
+  const el = $(id); el.innerHTML = "";
+  items.forEach(v => {
+    const b = document.createElement("button");
+    b.className = "pick"; b.textContent = v; b.type = "button";
+    b.setAttribute("aria-pressed", state[key] === v);
+    b.onclick = () => {
+      state[key] = v;
+      [...el.children].forEach(c => c.setAttribute("aria-pressed", c.textContent === v));
+    };
+    el.appendChild(b);
+  });
+}
+function multi(id, items){
+  const el = $(id); el.innerHTML = "";
+  items.forEach(v => {
+    const b = document.createElement("button");
+    b.className = "pick"; b.textContent = v; b.type = "button";
+    b.setAttribute("aria-pressed", state.brands.includes(v));
+    b.onclick = () => {
+      state.brands = state.brands.includes(v)
+        ? state.brands.filter(x => x !== v) : [...state.brands, v];
+      b.setAttribute("aria-pressed", state.brands.includes(v));
+    };
+    el.appendChild(b);
+  });
+}
+function syncPicks(){
+  [["typePicks","type"],["statusPicks","status"]].forEach(([id,key]) =>
+    [...$(id).children].forEach(c => c.setAttribute("aria-pressed", c.textContent === state[key])));
+  [...$("brandPicks").children].forEach(c =>
+    c.setAttribute("aria-pressed", state.brands.includes(c.textContent)));
+}
+
+/* ── 파일 ── */
+const drop = $("drop");
+drop.onclick = () => $("file").click();
+drop.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("file").click(); } };
+drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+drop.ondragleave = () => drop.classList.remove("over");
+drop.ondrop = e => {
+  e.preventDefault(); drop.classList.remove("over");
+  take(e.dataTransfer.files[0]);
+};
+$("file").onchange = e => take(e.target.files[0]);
+
+async function take(f){
+  if (!f) return;
+  if (!/\.html?$/i.test(f.name)) return toast("HTML 파일만 등록할 수 있습니다.", "bad");
+  pending = f;
+  drop.classList.add("has");
+  drop.innerHTML = `<strong style="color:var(--ok)">${f.name}</strong>${Math.round(f.size/1024)} KB · 다시 누르면 교체`;
+
+  // 제목이 비어 있으면 <title>에서 가져온다
+  if (!$("title").value.trim()) {
+    const text = await f.text();
+    const m = text.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    if (m) {
+      const t = m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+      if (t) $("title").value = t;
+    }
+  }
+}
+
+/* ── 목록 ── */
+async function loadList(){
+  const { data, error } = await sb.from("reports")
+    .select("*").order("reported_on", { ascending:false });
+  if (error) return toast("목록을 불러오지 못했습니다: " + error.message, "bad");
+  $("cnt").textContent = data.length;
+  const el = $("list"); el.innerHTML = "";
+  data.forEach(r => {
+    const b = document.createElement("button");
+    b.className = "item"; b.type = "button";
+    b.setAttribute("aria-current", editing?.id === r.id);
+    b.innerHTML = `<span class="dk">${r.docket}</span>
+                   <span class="tt">${r.title}</span>
+                   <span class="st s-${r.status}">${r.status}</span>`;
+    b.onclick = () => edit(r);
+    el.appendChild(b);
+  });
+}
+
+function edit(r){
+  editing = r;
+  $("formTitle").textContent = "보고서 수정";
+  $("formHint").textContent = r.docket + " · 파일을 새로 올리면 원본이 교체됩니다.";
+  $("docket").value = r.docket;
+  $("reported_on").value = r.reported_on;
+  $("title").value = r.title;
+  $("subtitle").value = r.subtitle || "";
+  $("summary").value = r.summary || "";
+  $("audience").value = r.audience || "";
+  $("tags").value = (r.tags || []).join(", ");
+  $("shareField").classList.remove("hidden");
+  $("shareUrl").classList.add("hidden");
+  $("shareBtn").textContent = "90일짜리 링크 만들기";
+  state.type = r.report_type; state.status = r.status; state.brands = [...(r.brands || [])];
+  syncPicks();
+  clearFile();
+  $("saveBtn").textContent = "수정 저장";
+  $("newBtn").classList.remove("hidden");
+  $("delBtn").classList.remove("hidden");
+  loadList();
+  window.scrollTo({ top:0, behavior:"smooth" });
+}
+
+function clearFile(){
+  pending = null;
+  drop.classList.remove("has");
+  drop.innerHTML = `<strong>파일을 끌어다 놓으세요</strong>클릭해서 선택할 수도 있습니다 · .html`;
+  $("file").value = "";
+}
+
+function resetForm(){
+  editing = null;
+  $("formTitle").textContent = "새 보고서 등록";
+  $("formHint").textContent = "HTML 파일을 올리면 제목을 자동으로 읽어옵니다.";
+  ["docket","title","subtitle","summary","audience","tags"].forEach(i => $(i).value = "");
+  $("reported_on").value = new Date().toISOString().slice(0,10);
+  $("shareField").classList.add("hidden");
+  state.type = "진행보고"; state.status = "검토중"; state.brands = [];
+  syncPicks();
+  clearFile();
+  $("saveBtn").textContent = "등록";
+  $("newBtn").classList.add("hidden");
+  $("delBtn").classList.add("hidden");
+  loadList();
+}
+$("newBtn").onclick = resetForm;
+
+/* ── 저장 ── */
+$("saveBtn").onclick = async () => {
+  const title = $("title").value.trim();
+  const date  = $("reported_on").value;
+  if (!title) return toast("제목을 입력하세요.", "bad");
+  if (!date)  return toast("보고일을 선택하세요.", "bad");
+  if (!editing && !pending) return toast("원본 HTML 파일을 올려주세요.", "bad");
+
+  const btn = $("saveBtn");
+  btn.disabled = true; btn.textContent = "저장 중…";
+
+  try {
+    let docket = $("docket").value.trim();
+    if (!docket) {
+      const { data, error } = await sb.rpc("next_docket", { p_year: Number(date.slice(0,4)) });
+      if (error) throw error;
+      docket = data;
+    }
+
+    let storage_path = editing?.storage_path || null;
+    if (pending) {
+      const [y, m] = date.split("-");
+      storage_path = `${y}/${m}/${docket}.html`;
+      const { error } = await sb.storage.from("reports")
+        .upload(storage_path, pending, { contentType:"text/html; charset=utf-8", upsert:true });
+      if (error) throw error;
+    }
+
+    const payload = {
+      docket, title,
+      subtitle:   $("subtitle").value.trim() || null,
+      summary:    $("summary").value.trim() || null,
+      report_type:state.type,
+      status:     state.status,
+      brands:     state.brands,
+      audience:   $("audience").value.trim() || null,
+      reported_on:date,
+      tags:       $("tags").value.split(",").map(s => s.trim()).filter(Boolean),
+      storage_path,
+    };
+
+    const { error } = editing
+      ? await sb.from("reports").update(payload).eq("id", editing.id)
+      : await sb.from("reports").insert(payload);
+    if (error) throw error;
+
+    toast(editing ? `${docket} 수정했습니다.` : `${docket} 등록했습니다.`);
+    resetForm();
+  } catch (e) {
+    toast("저장하지 못했습니다: " + (e.message || e), "bad");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = editing ? "수정 저장" : "등록";
+  }
+};
+
+/* ── 공유 링크 ── */
+$("shareBtn").onclick = async () => {
+  if (!editing?.storage_path) return toast("먼저 원본 파일이 등록되어야 합니다.", "bad");
+  const btn = $("shareBtn");
+  btn.disabled = true; btn.textContent = "만드는 중…";
+  const { data, error } = await sb.storage.from("reports")
+    .createSignedUrl(editing.storage_path, 90 * 24 * 3600);
+  btn.disabled = false;
+  if (error) { btn.textContent = "90일짜리 링크 만들기"; return toast("링크를 만들지 못했습니다: " + error.message, "bad"); }
+  // 중계 함수를 거쳐야 화면으로 열린다
+  // Supabase 직링크는 소스코드로만 보이므로 view.html 을 거치게 한다
+  const base = location.href.replace(/\/[^/]*$/, "");
+  const link = `${base}/view.html?u=${encodeURIComponent(data.signedUrl)}`;
+  const box = $("shareUrl");
+  box.value = link;
+  box.classList.remove("hidden");
+  box.select();
+  try { await navigator.clipboard.writeText(link); toast("링크를 복사했습니다. 90일간 열립니다."); }
+  catch { toast("링크를 만들었습니다. 직접 복사해 전달하세요."); }
+  btn.textContent = "링크 다시 만들기";
+};
+
+/* ── 삭제 ── */
+$("delBtn").onclick = async () => {
+  if (!editing) return;
+  if (!confirm(`${editing.docket} 을(를) 대장에서 지웁니다. 원본 파일도 함께 삭제됩니다.`)) return;
+  if (editing.storage_path) await sb.storage.from("reports").remove([editing.storage_path]);
+  const { error } = await sb.from("reports").delete().eq("id", editing.id);
+  if (error) return toast("삭제하지 못했습니다: " + error.message, "bad");
+  toast(`${editing.docket} 을(를) 지웠습니다.`);
+  resetForm();
+};
+</script>
+</body>
+</html>

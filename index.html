@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>웹 보고서 대장 — 그룹온라인 IT</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --void:#0E1116; --shelf:#161B23; --shelf-2:#1D2430;
+    --edge:#2A3341; --edge-hi:#3C4757;
+    --ink:#E9EDF4; --ink-2:#9AA6B8; --dim:#6B7789;
+    --beam:#6EA8FE; --beam-soft:#6EA8FE1A;
+    --ok:#4ADE80; --run:#60A5FA; --wait:#FBBF24;
+    --mono:"SF Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--void);color:var(--ink);
+    font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo",sans-serif;
+    line-height:1.6;font-size:15px;-webkit-font-smoothing:antialiased;min-height:100vh;
+  }
+  .wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+  a{color:var(--beam)}
+  .hidden{display:none!important}
+
+  /* 로그인 */
+  #gate{display:grid;place-items:center;min-height:100vh;padding:24px}
+  .gate-box{width:100%;max-width:360px}
+  .gate-box .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
+  .gate-box h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:12px 0 6px}
+  .gate-box p{color:var(--ink-2);font-size:13.5px;margin-bottom:26px}
+  .field{margin-bottom:14px}
+  label{display:block;font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:6px}
+  input[type=email],input[type=password]{
+    width:100%;background:var(--shelf);border:1px solid var(--edge);border-radius:8px;
+    padding:10px 12px;color:var(--ink);font-family:inherit;font-size:14px;
+  }
+  input:focus{outline:none;border-color:var(--beam);box-shadow:0 0 0 3px var(--beam-soft)}
+  .btn{
+    background:var(--beam);color:#08111F;border:none;border-radius:8px;padding:11px 18px;
+    font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;width:100%;
+  }
+  .btn:hover{filter:brightness(1.1)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .err{color:#F87171;font-size:12.5px;margin-top:12px;min-height:18px}
+
+  /* 상단 */
+  header{padding:52px 0 28px}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
+  h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:12px}
+  .sub{color:var(--ink-2);font-size:14.5px;margin-top:8px;max-width:560px}
+  .count{font-family:var(--mono);font-size:12px;color:var(--dim);margin-top:18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .count b{color:var(--beam);font-weight:600}
+  .count a{text-decoration:none}
+  .count button{background:none;border:none;color:var(--dim);font-family:var(--mono);font-size:12px;cursor:pointer;padding:0}
+  .count button:hover{color:var(--ink)}
+
+  /* 검색 */
+  .controls{
+    position:sticky;top:0;z-index:30;background:rgba(14,17,22,.82);backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--edge);padding:14px 0;margin-bottom:32px;
+  }
+  .ctrl-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .search{flex:1 1 260px;min-width:200px;position:relative}
+  .search input{
+    width:100%;background:var(--shelf);border:1px solid var(--edge);border-radius:9px;
+    padding:10px 14px 10px 38px;color:var(--ink);font-family:inherit;font-size:14px;
+  }
+  .search input::placeholder{color:var(--dim)}
+  .search input:focus{outline:none;border-color:var(--beam);box-shadow:0 0 0 3px var(--beam-soft)}
+  .search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--dim)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{
+    background:transparent;border:1px solid var(--edge);color:var(--ink-2);border-radius:99px;
+    padding:6px 13px;font-size:12.5px;font-family:inherit;cursor:pointer;transition:all .15s;white-space:nowrap;
+  }
+  .chip:hover{border-color:var(--edge-hi);color:var(--ink)}
+  .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--void);font-weight:600}
+  .chip:focus-visible{outline:2px solid var(--beam);outline-offset:2px}
+
+  /* 컨택트 시트 */
+  .sheet{display:grid;gap:22px;padding-bottom:80px;grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+  .card{
+    background:var(--shelf);border:1px solid var(--edge);border-radius:12px;overflow:hidden;
+    display:flex;flex-direction:column;text-decoration:none;color:inherit;
+    transition:transform .22s cubic-bezier(.2,.7,.3,1),border-color .22s,box-shadow .22s;
+  }
+  .card:hover,.card:focus-visible{
+    transform:translateY(-4px);border-color:var(--edge-hi);box-shadow:0 18px 44px rgba(0,0,0,.5);outline:none;
+  }
+  .card:focus-visible{border-color:var(--beam)}
+  .peek{position:relative;height:190px;background:#fff;overflow:hidden;border-bottom:1px solid var(--edge)}
+  .peek iframe{
+    position:absolute;top:0;left:0;width:1280px;height:1400px;border:0;
+    transform:scale(.29);transform-origin:0 0;pointer-events:none;
+  }
+  .peek::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(22,27,35,.82))}
+  .peek .fallback{
+    position:absolute;inset:0;display:grid;place-items:center;
+    background:var(--shelf-2);color:var(--dim);font-family:var(--mono);font-size:11px;
+  }
+  .badge{
+    position:absolute;top:10px;left:10px;z-index:2;font-family:var(--mono);font-size:10.5px;
+    letter-spacing:.08em;background:rgba(14,17,22,.86);border:1px solid var(--edge-hi);
+    color:var(--ink-2);padding:4px 8px;border-radius:5px;
+  }
+  .state{
+    position:absolute;top:10px;right:10px;z-index:2;font-size:11px;font-weight:700;
+    padding:4px 9px;border-radius:5px;background:rgba(14,17,22,.86);border:1px solid;
+  }
+  .s-확정,.s-종결{color:var(--ok);border-color:#4ADE8055}
+  .s-진행중{color:var(--run);border-color:#60A5FA55}
+  .s-검토중,.s-작성중,.s-보류{color:var(--wait);border-color:#FBBF2455}
+  .body{padding:16px 17px 18px;display:flex;flex-direction:column;gap:9px;flex:1}
+  .type{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--beam)}
+  .title{font-size:16px;font-weight:700;line-height:1.42;letter-spacing:-.01em}
+  .summary{
+    font-size:13px;color:var(--ink-2);line-height:1.6;flex:1;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .foot{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding-top:11px;border-top:1px solid var(--edge);font-family:var(--mono);font-size:11px;color:var(--dim);
+  }
+  .brands{display:flex;gap:5px;flex-wrap:wrap}
+  .brand{background:var(--shelf-2);border-radius:4px;padding:2px 7px;font-family:inherit}
+  .empty{grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--dim)}
+  .empty .hint{font-size:13px;color:var(--edge-hi);margin-top:6px}
+  .note{border-top:1px solid var(--edge);padding:26px 0 60px;font-size:12.5px;color:var(--dim);line-height:1.75}
+  .note code{font-family:var(--mono);color:var(--ink-2);background:var(--shelf);padding:1px 5px;border-radius:4px}
+
+  @media (max-width:640px){
+    header{padding:36px 0 22px} h1{font-size:24px}
+    .peek{height:150px} .peek iframe{transform:scale(.23)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important} .card:hover{transform:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="gate" class="hidden">
+  <div class="gate-box">
+    <div class="kicker">Group Online IT · Report Registry</div>
+    <h1>웹 보고서 대장</h1>
+    <p>보고서 열람은 사내 계정으로 로그인해야 합니다.</p>
+    <div class="field">
+      <label for="em">이메일</label>
+      <input id="em" type="email" autocomplete="username" placeholder="name@eland.co.kr">
+    </div>
+    <div class="field">
+      <label for="pw">비밀번호</label>
+      <input id="pw" type="password" autocomplete="current-password">
+    </div>
+    <button class="btn" id="loginBtn">로그인</button>
+    <p class="err" id="err"></p>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <div class="wrap">
+      <div class="kicker">Group Online IT · Report Registry</div>
+      <h1>웹 보고서 대장</h1>
+      <p class="sub">그동안 개별로 만들어 공유한 웹 보고서를 한곳에 모았습니다. 표지를 보고 찾고, 눌러서 원본을 엽니다.</p>
+      <p class="count">
+        <span><b id="shown">0</b> / <span id="total">0</span> REPORTS</span>
+        <a href="/functions/v1/hub/admin">보고서 등록 →</a>
+        <span id="me"></span>
+        <button id="outBtn">로그아웃</button>
+      </p>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="wrap ctrl-row">
+      <div class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
+        </svg>
+        <input id="q" type="search" placeholder="제목 · 요약 · 태그 · 문서번호로 검색" autocomplete="off">
+      </div>
+      <div class="chips" id="brandChips"></div>
+      <div class="chips" id="statusChips"></div>
+    </div>
+  </div>
+
+  <main class="wrap"><div class="sheet" id="sheet"></div></main>
+
+  <footer class="wrap note">
+    <p>문서번호 규칙 <code>GO-연도-일련번호</code> · 원본 HTML 은 Supabase Storage <code>reports</code> 버킷(비공개)에 <code>연/월/문서번호.html</code> 로 보관합니다.</p>
+    <p>계정이 없는 분께는 등록 화면에서 <b>공유 링크</b>를 만들어 전달하세요.</p>
+  </footer>
+</div>
+
+<script>
+/* ── 설정 ───────────────────────────────────── */
+const SUPABASE_URL = "https://urlspnmnjzvqzjfdicbm.supabase.co";
+const SUPABASE_KEY = "sb_publishable_EqiGjr0TQzGWAmU46Q8OVQ_Q-AvYTI9";
+/* ───────────────────────────────────────────── */
+
+const $ = id => document.getElementById(id);
+let sb = null, ALL = [];
+const state = { q:"", brand:"전체", status:"전체" };
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  document.body.innerHTML =
+    `<div style="max-width:520px;margin:22vh auto;padding:0 24px;font-family:system-ui;color:#E9EDF4">
+       <h1 style="font-size:20px;margin-bottom:10px">설정이 필요합니다</h1>
+       <p style="color:#9AA6B8;font-size:14px;line-height:1.7">
+         index.html 상단의 <code style="color:#6EA8FE">SUPABASE_URL</code> 과
+         <code style="color:#6EA8FE">SUPABASE_KEY</code> 를 채우세요.<br>
+         Supabase Dashboard → Project Settings → API 에서 확인할 수 있습니다.
+       </p>
+     </div>`;
+} else {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  boot();
+}
+
+async function boot(){
+  const { data:{ session } } = await sb.auth.getSession();
+  session ? enter(session) : $("gate").classList.remove("hidden");
+  sb.auth.onAuthStateChange((_e, s) => { if (!s) location.reload(); });
+}
+
+function enter(session){
+  $("gate").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  $("me").textContent = session.user.email;
+  load();
+}
+
+$("loginBtn").onclick = async () => {
+  const b = $("loginBtn");
+  b.disabled = true; b.textContent = "확인 중…"; $("err").textContent = "";
+  const { data, error } = await sb.auth.signInWithPassword({
+    email: $("em").value.trim(), password: $("pw").value
+  });
+  b.disabled = false; b.textContent = "로그인";
+  if (error) { $("err").textContent = "로그인하지 못했습니다. 이메일과 비밀번호를 확인하세요."; return; }
+  enter(data.session);
+};
+$("pw").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
+$("outBtn").onclick = () => sb.auth.signOut();
+
+async function load(){
+  const { data, error } = await sb.from("reports_index").select("*");
+  if (error) {
+    $("sheet").innerHTML = `<div class="empty"><p>보고서를 불러오지 못했습니다.</p>
+      <p class="hint">${error.message}</p></div>`;
+    return;
+  }
+  ALL = data;
+
+  buildChips();
+  render();
+
+  // Supabase 는 자기 주소에서 HTML 을 화면으로 안 띄운다(피싱 방지 정책).
+  // 그래서 파일을 직접 받아 브라우저 안에서 HTML 로 되살려 띄운다.
+  await Promise.all(ALL.map(async r => {
+    if (!r.storage_path) return;
+    try {
+      const { data, error } = await sb.storage.from("reports").download(r.storage_path);
+      if (error || !data) return;
+      const body = await data.text();
+      r.view_url = URL.createObjectURL(new Blob([body], { type: "text/html" }));
+    } catch (_) { /* 원본이 아직 안 올라온 보고서는 표지 없이 표시 */ }
+  }));
+  buildChips();
+  render();
+}
+
+function buildChips(){
+  mount("brandChips", ["전체", ...new Set(ALL.flatMap(r => r.brands || []))], "brand");
+  mount("statusChips", ["전체", ...new Set(ALL.map(r => r.status))], "status");
+}
+function mount(id, items, key){
+  const el = $(id); el.innerHTML = "";
+  items.forEach(v => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.textContent = v;
+    b.setAttribute("aria-pressed", state[key] === v);
+    b.onclick = () => {
+      state[key] = v;
+      el.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c.textContent === v));
+      render();
+    };
+    el.appendChild(b);
+  });
+}
+
+function match(r){
+  if (state.brand !== "전체" && !(r.brands || []).includes(state.brand)) return false;
+  if (state.status !== "전체" && r.status !== state.status) return false;
+  if (!state.q) return true;
+  const hay = [r.title, r.subtitle, r.summary, r.docket, (r.tags||[]).join(" ")]
+    .filter(Boolean).join(" ").toLowerCase();
+  return hay.includes(state.q.toLowerCase());
+}
+
+function render(){
+  const sheet = $("sheet");
+  const list = ALL.filter(match).sort((a,b) => (b.reported_on||"").localeCompare(a.reported_on||""));
+  $("shown").textContent = list.length;
+  $("total").textContent = ALL.length;
+  sheet.innerHTML = "";
+
+  if (!list.length) {
+    sheet.innerHTML = `<div class="empty"><p>조건에 맞는 보고서가 없습니다.</p>
+      <p class="hint">검색어를 줄이거나 필터를 전체로 되돌려 보세요.</p></div>`;
+    return;
+  }
+
+  list.forEach(r => {
+    const a = document.createElement("a");
+    a.className = "card";
+    a.href = r.view_url || "#";
+    a.target = "_blank"; a.rel = "noopener";
+    const d = (r.reported_on || "").replaceAll("-", ".").slice(2);
+    const peek = r.view_url
+      ? `<iframe src="${r.view_url}" loading="lazy" tabindex="-1" title=""
+                 sandbox="allow-same-origin" scrolling="no"></iframe>`
+      : `<div class="fallback">NO PREVIEW</div>`;
+    a.innerHTML = `
+      <div class="peek">
+        <span class="badge">${r.docket}</span>
+        <span class="state s-${r.status}">${r.status}</span>
+        ${peek}
+      </div>
+      <div class="body">
+        <div class="type">${r.report_type}</div>
+        <div class="title">${r.title}</div>
+        <div class="summary">${r.summary || ""}</div>
+        <div class="foot">
+          <span class="brands">${(r.brands||[]).map(b => `<span class="brand">${b}</span>`).join("")}</span>
+          <span>${d}</span>
+        </div>
+      </div>`;
+    sheet.appendChild(a);
+  });
+}
+
+$("q").addEventListener("input", e => { state.q = e.target.value.trim(); render(); });
+</script>
+</body>
+</html>

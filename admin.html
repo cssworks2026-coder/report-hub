@@ -297,7 +297,7 @@ async function boot(){
   buildPicks();
   const { data:{ session } } = await sb.auth.getSession();
   session ? enter(session) : $("gate").classList.remove("hidden");
-  sb.auth.onAuthStateChange((_e, s) => { if (!s) location.reload(); });
+  sb.auth.onAuthStateChange((event) => { if (event === "SIGNED_OUT") location.reload(); });
 }
 
 function enter(session){

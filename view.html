@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>보고서 — 그룹온라인 IT</title>
 <style>
-  html,body{margin:0;height:100%;background:#0E1116}
+  html,body{margin:0;height:100%;background:#F4F6FA}
   iframe{border:0;width:100%;height:100%;display:block;background:#fff}
   .msg{
-    display:grid;place-items:center;height:100%;color:#9AA6B8;text-align:center;padding:24px;
+    display:grid;place-items:center;height:100%;color:#5A6577;text-align:center;padding:24px;
     font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
     font-size:15px;line-height:1.75;
   }
-  .msg b{display:block;color:#E9EDF4;font-size:18px;margin-bottom:8px}
+  .msg b{display:block;color:#1A2130;font-size:18px;margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -34,7 +34,6 @@ function fail(title, detail){
   const u = new URLSearchParams(location.search).get("u");
   if (!u) return fail("잘못된 링크입니다.", "공유해 주신 분께 새 링크를 요청하세요.");
 
-  // 이 프로젝트의 보고서 서명 링크만 연다
   if (!/^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/sign\/reports\//.test(u)) {
     return fail("잘못된 링크입니다.", "공유해 주신 분께 새 링크를 요청하세요.");
   }

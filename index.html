@@ -8,11 +8,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
-    --void:#0E1116; --shelf:#161B23; --shelf-2:#1D2430;
-    --edge:#2A3341; --edge-hi:#3C4757;
-    --ink:#E9EDF4; --ink-2:#9AA6B8; --dim:#6B7789;
-    --beam:#6EA8FE; --beam-soft:#6EA8FE1A;
-    --ok:#4ADE80; --run:#60A5FA; --wait:#FBBF24;
+    --void:#F4F6FA; --shelf:#FFFFFF; --shelf-2:#EEF1F6;
+    --edge:#E2E6EE; --edge-hi:#C7CEDA;
+    --ink:#1A2130; --ink-2:#5A6577; --dim:#8B94A3;
+    --beam:#2563EB; --beam-soft:#2563EB14;
+    --ok:#16A34A; --run:#2563EB; --wait:#B7791F;
     --mono:"SF Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
   }
   *{margin:0;padding:0;box-sizing:border-box}
@@ -26,7 +26,6 @@
   a{color:var(--beam)}
   .hidden{display:none!important}
 
-  /* 로그인 */
   #gate{display:grid;place-items:center;min-height:100vh;padding:24px}
   .gate-box{width:100%;max-width:360px}
   .gate-box .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
@@ -40,14 +39,13 @@
   }
   input:focus{outline:none;border-color:var(--beam);box-shadow:0 0 0 3px var(--beam-soft)}
   .btn{
-    background:var(--beam);color:#08111F;border:none;border-radius:8px;padding:11px 18px;
+    background:var(--beam);color:#fff;border:none;border-radius:8px;padding:11px 18px;
     font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;width:100%;
   }
   .btn:hover{filter:brightness(1.1)}
   .btn:disabled{opacity:.45;cursor:not-allowed}
-  .err{color:#F87171;font-size:12.5px;margin-top:12px;min-height:18px}
+  .err{color:#DC2626;font-size:12.5px;margin-top:12px;min-height:18px}
 
-  /* 상단 */
   header{padding:52px 0 28px}
   .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
   h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:12px}
@@ -58,9 +56,8 @@
   .count button{background:none;border:none;color:var(--dim);font-family:var(--mono);font-size:12px;cursor:pointer;padding:0}
   .count button:hover{color:var(--ink)}
 
-  /* 검색 */
   .controls{
-    position:sticky;top:0;z-index:30;background:rgba(14,17,22,.82);backdrop-filter:blur(14px);
+    position:sticky;top:0;z-index:30;background:rgba(244,246,250,.85);backdrop-filter:blur(14px);
     border-bottom:1px solid var(--edge);padding:14px 0;margin-bottom:32px;
   }
   .ctrl-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
@@ -81,7 +78,6 @@
   .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--void);font-weight:600}
   .chip:focus-visible{outline:2px solid var(--beam);outline-offset:2px}
 
-  /* 컨택트 시트 */
   .sheet{display:grid;gap:22px;padding-bottom:80px;grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
   .card{
     background:var(--shelf);border:1px solid var(--edge);border-radius:12px;overflow:hidden;
@@ -89,7 +85,7 @@
     transition:transform .22s cubic-bezier(.2,.7,.3,1),border-color .22s,box-shadow .22s;
   }
   .card:hover,.card:focus-visible{
-    transform:translateY(-4px);border-color:var(--edge-hi);box-shadow:0 18px 44px rgba(0,0,0,.5);outline:none;
+    transform:translateY(-4px);border-color:var(--edge-hi);box-shadow:0 14px 34px rgba(26,33,48,.14);outline:none;
   }
   .card:focus-visible{border-color:var(--beam)}
   .peek{position:relative;height:190px;background:#fff;overflow:hidden;border-bottom:1px solid var(--edge)}
@@ -97,23 +93,23 @@
     position:absolute;top:0;left:0;width:1280px;height:1400px;border:0;
     transform:scale(.29);transform-origin:0 0;pointer-events:none;
   }
-  .peek::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(22,27,35,.82))}
+  .peek::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 70%,rgba(255,255,255,.6))}
   .peek .fallback{
     position:absolute;inset:0;display:grid;place-items:center;
     background:var(--shelf-2);color:var(--dim);font-family:var(--mono);font-size:11px;
   }
   .badge{
     position:absolute;top:10px;left:10px;z-index:2;font-family:var(--mono);font-size:10.5px;
-    letter-spacing:.08em;background:rgba(14,17,22,.86);border:1px solid var(--edge-hi);
+    letter-spacing:.08em;background:rgba(255,255,255,.92);border:1px solid var(--edge-hi);
     color:var(--ink-2);padding:4px 8px;border-radius:5px;
   }
   .state{
     position:absolute;top:10px;right:10px;z-index:2;font-size:11px;font-weight:700;
-    padding:4px 9px;border-radius:5px;background:rgba(14,17,22,.86);border:1px solid;
+    padding:4px 9px;border-radius:5px;background:rgba(255,255,255,.92);border:1px solid;
   }
-  .s-확정,.s-종결{color:var(--ok);border-color:#4ADE8055}
-  .s-진행중{color:var(--run);border-color:#60A5FA55}
-  .s-검토중,.s-작성중,.s-보류{color:var(--wait);border-color:#FBBF2455}
+  .s-확정,.s-종결{color:var(--ok);border-color:#16A34A55}
+  .s-진행중{color:var(--run);border-color:#2563EB55}
+  .s-검토중,.s-작성중,.s-보류{color:var(--wait);border-color:#B7791F55}
   .body{padding:16px 17px 18px;display:flex;flex-direction:column;gap:9px;flex:1}
   .type{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--beam)}
   .title{font-size:16px;font-weight:700;line-height:1.42;letter-spacing:-.01em}
@@ -198,25 +194,15 @@
 </div>
 
 <script>
-/* ── 설정 ───────────────────────────────────── */
 const SUPABASE_URL = "https://urlspnmnjzvqzjfdicbm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_EqiGjr0TQzGWAmU46Q8OVQ_Q-AvYTI9";
-/* ───────────────────────────────────────────── */
 
 const $ = id => document.getElementById(id);
 let sb = null, ALL = [];
 const state = { q:"", brand:"전체", status:"전체" };
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-  document.body.innerHTML =
-    `<div style="max-width:520px;margin:22vh auto;padding:0 24px;font-family:system-ui;color:#E9EDF4">
-       <h1 style="font-size:20px;margin-bottom:10px">설정이 필요합니다</h1>
-       <p style="color:#9AA6B8;font-size:14px;line-height:1.7">
-         index.html 상단의 <code style="color:#6EA8FE">SUPABASE_URL</code> 과
-         <code style="color:#6EA8FE">SUPABASE_KEY</code> 를 채우세요.<br>
-         Supabase Dashboard → Project Settings → API 에서 확인할 수 있습니다.
-       </p>
-     </div>`;
+  document.body.innerHTML = '<div style="padding:40px">설정 필요</div>';
 } else {
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   boot();
@@ -251,17 +237,12 @@ $("outBtn").onclick = () => sb.auth.signOut();
 async function load(){
   const { data, error } = await sb.from("reports_index").select("*");
   if (error) {
-    $("sheet").innerHTML = `<div class="empty"><p>보고서를 불러오지 못했습니다.</p>
-      <p class="hint">${error.message}</p></div>`;
+    $("sheet").innerHTML = '<div class="empty"><p>보고서를 불러오지 못했습니다.</p><p class="hint">' + error.message + '</p></div>';
     return;
   }
   ALL = data;
-
   buildChips();
   render();
-
-  // Supabase 는 자기 주소에서 HTML 을 화면으로 안 띄운다(피싱 방지 정책).
-  // 그래서 파일을 직접 받아 브라우저 안에서 HTML 로 되살려 띄운다.
   await Promise.all(ALL.map(async r => {
     if (!r.storage_path) return;
     try {
@@ -269,7 +250,7 @@ async function load(){
       if (error || !data) return;
       const body = await data.text();
       r.view_url = URL.createObjectURL(new Blob([body], { type: "text/html" }));
-    } catch (_) { /* 원본이 아직 안 올라온 보고서는 표지 없이 표시 */ }
+    } catch (_) {}
   }));
   buildChips();
   render();
@@ -298,8 +279,7 @@ function match(r){
   if (state.brand !== "전체" && !(r.brands || []).includes(state.brand)) return false;
   if (state.status !== "전체" && r.status !== state.status) return false;
   if (!state.q) return true;
-  const hay = [r.title, r.subtitle, r.summary, r.docket, (r.tags||[]).join(" ")]
-    .filter(Boolean).join(" ").toLowerCase();
+  const hay = [r.title, r.subtitle, r.summary, r.docket, (r.tags||[]).join(" ")].filter(Boolean).join(" ").toLowerCase();
   return hay.includes(state.q.toLowerCase());
 }
 
@@ -309,13 +289,10 @@ function render(){
   $("shown").textContent = list.length;
   $("total").textContent = ALL.length;
   sheet.innerHTML = "";
-
   if (!list.length) {
-    sheet.innerHTML = `<div class="empty"><p>조건에 맞는 보고서가 없습니다.</p>
-      <p class="hint">검색어를 줄이거나 필터를 전체로 되돌려 보세요.</p></div>`;
+    sheet.innerHTML = '<div class="empty"><p>조건에 맞는 보고서가 없습니다.</p></div>';
     return;
   }
-
   list.forEach(r => {
     const a = document.createElement("a");
     a.className = "card";
@@ -323,24 +300,9 @@ function render(){
     a.target = "_blank"; a.rel = "noopener";
     const d = (r.reported_on || "").replaceAll("-", ".").slice(2);
     const peek = r.view_url
-      ? `<iframe src="${r.view_url}" loading="lazy" tabindex="-1" title=""
-                 sandbox="allow-same-origin" scrolling="no"></iframe>`
-      : `<div class="fallback">NO PREVIEW</div>`;
-    a.innerHTML = `
-      <div class="peek">
-        <span class="badge">${r.docket}</span>
-        <span class="state s-${r.status}">${r.status}</span>
-        ${peek}
-      </div>
-      <div class="body">
-        <div class="type">${r.report_type}</div>
-        <div class="title">${r.title}</div>
-        <div class="summary">${r.summary || ""}</div>
-        <div class="foot">
-          <span class="brands">${(r.brands||[]).map(b => `<span class="brand">${b}</span>`).join("")}</span>
-          <span>${d}</span>
-        </div>
-      </div>`;
+      ? '<iframe src="' + r.view_url + '" loading="lazy" tabindex="-1" title="" sandbox="allow-same-origin" scrolling="no"></iframe>'
+      : '<div class="fallback">NO PREVIEW</div>';
+    a.innerHTML = '<div class="peek"><span class="badge">' + r.docket + '</span><span class="state s-' + r.status + '">' + r.status + '</span>' + peek + '</div><div class="body"><div class="type">' + r.report_type + '</div><div class="title">' + r.title + '</div><div class="summary">' + (r.summary || "") + '</div><div class="foot"><span class="brands">' + (r.brands||[]).map(b => '<span class="brand">' + b + '</span>').join("") + '</span><span>' + d + '</span></div></div>';
     sheet.appendChild(a);
   });
 }

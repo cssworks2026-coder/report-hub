@@ -8,11 +8,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
-    --void:#0E1116; --shelf:#161B23; --shelf-2:#1D2430;
-    --edge:#2A3341; --edge-hi:#3C4757;
-    --ink:#E9EDF4; --ink-2:#9AA6B8; --dim:#6B7789;
-    --beam:#6EA8FE; --beam-soft:#6EA8FE1A;
-    --ok:#4ADE80; --wait:#FBBF24; --bad:#F87171;
+    --void:#F4F6FA; --shelf:#FFFFFF; --shelf-2:#EEF1F6;
+    --edge:#E2E6EE; --edge-hi:#C7CEDA;
+    --ink:#1A2130; --ink-2:#5A6577; --dim:#8B94A3;
+    --beam:#2563EB; --beam-soft:#2563EB14;
+    --ok:#16A34A; --wait:#B7791F; --bad:#DC2626;
     --mono:"SF Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
   }
   *{margin:0;padding:0;box-sizing:border-box}
@@ -24,22 +24,18 @@
   .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
   a{color:var(--beam)}
 
-  /* ── 로그인 ── */
   #gate{display:grid;place-items:center;min-height:100vh;padding:24px}
   .gate-box{width:100%;max-width:360px}
   .gate-box .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
   .gate-box h1{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:12px 0 6px}
   .gate-box p{color:var(--ink-2);font-size:13.5px;margin-bottom:26px}
 
-  /* ── 상단 ── */
   header{border-bottom:1px solid var(--edge);padding:20px 0;margin-bottom:34px}
   .head-row{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
   .brandmark{font-size:17px;font-weight:800;letter-spacing:-.01em}
-  .brandmark span{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;color:var(--dim);
-    text-transform:uppercase;display:block;font-weight:400;margin-bottom:3px}
+  .brandmark span{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;display:block;font-weight:400;margin-bottom:3px}
   .who{font-family:var(--mono);font-size:11.5px;color:var(--dim);display:flex;align-items:center;gap:14px}
 
-  /* ── 레이아웃 ── */
   .cols{display:grid;grid-template-columns:1fr 380px;gap:34px;padding-bottom:90px;align-items:start}
   @media (max-width:940px){.cols{grid-template-columns:1fr}}
 
@@ -47,7 +43,6 @@
   .panel h2{font-size:14px;font-weight:700;margin-bottom:4px}
   .panel .hint{font-size:12.5px;color:var(--dim);margin-bottom:20px}
 
-  /* ── 폼 ── */
   .field{margin-bottom:16px}
   label{display:block;font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:6px}
   label .opt{color:var(--dim);font-weight:400}
@@ -73,7 +68,6 @@
   .share{display:flex;flex-direction:column;gap:8px}
   .share input{font-size:11.5px;color:var(--ink-2)}
 
-  /* ── 드롭존 ── */
   .drop{
     border:1.5px dashed var(--edge-hi);border-radius:10px;padding:28px 16px;text-align:center;
     color:var(--dim);font-size:13px;cursor:pointer;transition:all .18s;background:var(--void);
@@ -82,9 +76,8 @@
   .drop.has{border-style:solid;border-color:var(--ok);color:var(--ok);font-family:var(--mono);font-size:12px}
   .drop strong{display:block;color:var(--ink);font-weight:600;margin-bottom:4px;font-size:13.5px}
 
-  /* ── 버튼 ── */
   .btn{
-    background:var(--beam);color:#08111F;border:none;border-radius:8px;padding:11px 18px;
+    background:var(--beam);color:#fff;border:none;border-radius:8px;padding:11px 18px;
     font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:filter .15s;
   }
   .btn:hover{filter:brightness(1.1)}
@@ -95,7 +88,6 @@
   .btn:focus-visible{outline:2px solid var(--beam);outline-offset:2px}
   .actions{display:flex;gap:9px;margin-top:22px;padding-top:18px;border-top:1px solid var(--edge)}
 
-  /* ── 목록 ── */
   .list{display:flex;flex-direction:column;gap:2px}
   .item{
     display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
@@ -107,20 +99,19 @@
   .item .dk{font-family:var(--mono);font-size:10.5px;color:var(--dim)}
   .item .tt{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .item .st{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:4px;border:1px solid;white-space:nowrap}
-  .s-확정,.s-종결{color:var(--ok);border-color:#4ADE8055}
-  .s-진행중{color:var(--beam);border-color:#6EA8FE55}
-  .s-검토중,.s-작성중,.s-보류{color:var(--wait);border-color:#FBBF2455}
+  .s-확정,.s-종결{color:var(--ok);border-color:#16A34A55}
+  .s-진행중{color:var(--beam);border-color:#2563EB55}
+  .s-검토중,.s-작성중,.s-보류{color:var(--wait);border-color:#B7791F55}
 
-  /* ── 알림 ── */
   #toast{
     position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(120%);
     background:var(--shelf-2);border:1px solid var(--edge-hi);border-radius:9px;
     padding:12px 20px;font-size:13.5px;z-index:99;transition:transform .28s cubic-bezier(.2,.7,.3,1);
-    box-shadow:0 14px 40px rgba(0,0,0,.55);max-width:min(520px,90vw);
+    box-shadow:0 14px 34px rgba(26,33,48,.16);max-width:min(520px,90vw);
   }
   #toast.up{transform:translateX(-50%) translateY(0)}
-  #toast.ok{border-color:#4ADE8066}
-  #toast.bad{border-color:#F8717166}
+  #toast.ok{border-color:#16A34A66}
+  #toast.bad{border-color:#DC262666}
   .hidden{display:none!important}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -255,9 +246,6 @@
 <div id="toast"></div>
 
 <script>
-/* ─────────────────────────────────────────────
-   설정
-   ───────────────────────────────────────────── */
 const SUPABASE_URL = "https://urlspnmnjzvqzjfdicbm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_EqiGjr0TQzGWAmU46Q8OVQ_Q-AvYTI9";
 
@@ -265,7 +253,6 @@ const TYPES    = ["공수검토","진행보고","의사결정","계획","분석"
 const STATUSES = ["작성중","검토중","확정","진행중","종결","보류"];
 const BRANDS   = ["이랜드몰","키디키디","스파오","미쏘","공통"];
 
-/* ───────────────────────────────────────────── */
 let sb = null, editing = null, pending = null;
 const state = { type:"진행보고", status:"검토중", brands:[] };
 const $ = id => document.getElementById(id);
@@ -279,17 +266,9 @@ function toast(msg, kind="ok"){
 }
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-  document.body.innerHTML =
-    `<div style="max-width:520px;margin:22vh auto;padding:0 24px;font-family:system-ui">
-       <h1 style="font-size:20px;margin-bottom:10px">설정이 필요합니다</h1>
-       <p style="color:#9AA6B8;font-size:14px;line-height:1.7">
-         admin.html 상단의 <code style="color:#6EA8FE">SUPABASE_URL</code> 과
-         <code style="color:#6EA8FE">SUPABASE_KEY</code> 를 채우면 로그인 화면이 나타납니다.<br>
-         Supabase Dashboard → Project Settings → API 에서 확인할 수 있습니다.
-       </p>
-     </div>`;
+  document.body.innerHTML = '<div style="padding:40px">설정 필요</div>';
 } else {
-  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  sb = supsb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   boot();
 }
 
@@ -380,7 +359,6 @@ async function take(f){
   drop.classList.add("has");
   drop.innerHTML = `<strong style="color:var(--ok)">${f.name}</strong>${Math.round(f.size/1024)} KB · 다시 누르면 교체`;
 
-  // 제목이 비어 있으면 <title>에서 가져온다
   if (!$("title").value.trim()) {
     const text = await f.text();
     const m = text.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
@@ -523,8 +501,6 @@ $("shareBtn").onclick = async () => {
     .createSignedUrl(editing.storage_path, 90 * 24 * 3600);
   btn.disabled = false;
   if (error) { btn.textContent = "90일짜리 링크 만들기"; return toast("링크를 만들지 못했습니다: " + error.message, "bad"); }
-  // 중계 함수를 거쳐야 화면으로 열린다
-  // Supabase 직링크는 소스코드로만 보이므로 view.html 을 거치게 한다
   const base = location.href.replace(/\/[^/]*$/, "");
   const link = `${base}/view.html?u=${encodeURIComponent(data.signedUrl)}`;
   const box = $("shareUrl");

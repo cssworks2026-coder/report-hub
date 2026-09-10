@@ -219,6 +219,13 @@
       </div>
 
       <div class="field hidden" id="shareField">
+        <label>원본 파일 <span class="opt">· 등록된 HTML 다시 받기</span></label>
+        <div class="share">
+          <button class="btn ghost" id="downloadBtn" type="button">원본 HTML 다운로드</button>
+        </div>
+      </div>
+
+      <div class="field hidden" id="shareLinkField">
         <label>공유 링크 <span class="opt">· 계정 없는 분께 전달</span></label>
         <div class="share">
           <button class="btn ghost" id="shareBtn" type="button">90일짜리 링크 만들기</button>
@@ -399,9 +406,10 @@ function edit(r){
   $("summary").value = r.summary || "";
   $("audience").value = r.audience || "";
   $("tags").value = (r.tags || []).join(", ");
-  $("shareField").classList.remove("hidden");
+  $("shareLinkField").classList.remove("hidden");
   $("shareUrl").classList.add("hidden");
   $("shareBtn").textContent = "90일짜리 링크 만들기";
+  $("shareField").classList.toggle("hidden", !r.storage_path);
   state.type = r.report_type; state.status = r.status; state.brands = [...(r.brands || [])];
   syncPicks();
   clearFile();
@@ -426,6 +434,7 @@ function resetForm(){
   ["docket","title","subtitle","summary","audience","tags"].forEach(i => $(i).value = "");
   $("reported_on").value = new Date().toISOString().slice(0,10);
   $("shareField").classList.add("hidden");
+  $("shareLinkField").classList.add("hidden");
   state.type = "진행보고"; state.status = "검토중"; state.brands = [];
   syncPicks();
   clearFile();
@@ -489,6 +498,30 @@ $("saveBtn").onclick = async () => {
   } finally {
     btn.disabled = false;
     btn.textContent = editing ? "수정 저장" : "등록";
+  }
+};
+
+/* ── 원본 다운로드 ── */
+$("downloadBtn").onclick = async () => {
+  if (!editing?.storage_path) return toast("이 보고서에는 등록된 원본 파일이 없습니다.", "bad");
+  const btn = $("downloadBtn");
+  btn.disabled = true; btn.textContent = "내려받는 중…";
+  try {
+    const { data, error } = await sb.storage.from("reports").download(editing.storage_path);
+    if (error || !data) throw (error || new Error("파일을 받지 못했습니다."));
+    const url = URL.createObjectURL(data);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = editing.docket + ".html";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast(editing.docket + ".html 을(를) 내려받았습니다.");
+  } catch (e) {
+    toast("다운로드하지 못했습니다: " + (e.message || e), "bad");
+  } finally {
+    btn.disabled = false; btn.textContent = "원본 HTML 다운로드";
   }
 };
 
